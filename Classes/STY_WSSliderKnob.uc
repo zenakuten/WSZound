@@ -1,0 +1,34 @@
+class STY_WSSliderKnob extends STY2SliderKnob;
+
+#exec TEXTURE IMPORT NAME=WSSliderKnob GROUP=GUI FILE=Textures\SliderKnob.dds MIPS=off ALPHA=1 DXT=5
+
+//description:
+//	Img(0) Blurry	(component has no focus at all)
+//	Img(1) Watched	(when Mouse is hovering over it)
+//	Img(2) Focused	(component is selected)
+//	Img(3) Pressed	(component is being pressed)
+//	Img(4) Disabled	(component is disabled)
+
+defaultproperties
+{
+	KeyName="WSSliderKnob"
+	// FontColors double as the canvas color the native slider Draw uses for the fill
+	// image (UGUIComponent::Draw sets Canvas.Color = FontColors[state]). Keep the
+	// interactive states white so the fill isn't modulated on hover/focus/press -- a
+	// cyan tint here turns the red fill bar black (red * cyan = black).
+	FontColors(0)=(R=255,G=255,B=255)
+	FontColors(1)=(R=255,G=255,B=255)
+	FontColors(2)=(R=255,G=255,B=255)
+	FontColors(3)=(R=255,G=255,B=255)
+	FontColors(4)=(B=140,G=140,R=140)
+	ImgColors(0)=(B=255,G=255,R=255,A=255)
+	ImgColors(1)=(B=255,G=255,R=255,A=255)
+	ImgColors(2)=(B=255,G=255,R=255,A=255)
+	ImgColors(3)=(B=255,G=255,R=255,A=255)
+	ImgColors(4)=(B=140,G=140,R=140,A=220)
+	Images(0)=Texture'GUI.WSSliderKnob'
+	Images(1)=Texture'GUI.WSSliderKnob'
+	Images(2)=Texture'GUI.WSSliderKnob'
+	Images(3)=Texture'GUI.WSSliderKnob'
+	Images(4)=Texture'GUI.WSSliderKnob'
+}
