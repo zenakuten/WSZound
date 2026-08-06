@@ -14,6 +14,7 @@ var config int ZoundMenuKey;
 var config int ZoundVolume;
 var config bool bMuteLongZounds;
 var config float MaxZoundSeconds;
+var config bool bMenuKeyUserSet;
 var string KeyBind[125];
 var() config array<ZCTriggers> ZoundServer;
 var() string MyServerID;
@@ -22,12 +23,13 @@ var string MesgBind;
 var bool bShowMesg;
 var bool bMesgDone;
 var bool bMyInit;
+var bool bMenuKeyBlocked;
 var float MyTime;
+var string StockEndBind;
+var string MenuCmd;
 
 function Initialized()
 {
-    local string sBind;
-
     if(!ZoundInitial)
     {
         default.ZoundInitial = true;
@@ -38,12 +40,8 @@ function Initialized()
         self.StaticSaveConfig();
     }
     SetKeyBindList();
-    sBind = KeyBind[default.ZoundMenuKey];
     MesgLogon = "- This server uses Zound -";
-    if(sBind != "")
-    {
-        MesgBind = ("- ZoundMenu Keybind on " $ sBind) $ " key -";
-    }
+    SetMenuKeyMessage();
     MyTime = 0.0300000;
     ClientLogon();
     Enable('Tick');
@@ -61,13 +59,79 @@ function bool KeyEvent(out Interactions.EInputKey Key, out Interactions.EInputAc
     }
     else
     {
-        if((int(Key) == default.ZoundMenuKey) && default.ZoundMenuKey != 0)
+        if(((int(Key) == default.ZoundMenuKey) && default.ZoundMenuKey != 0) && !bMenuKeyBlocked)
         {
             PLC.ConsoleCommand("Mutate ZoundMenu");
             return true;
         }
     }
     return false;
+}
+
+// Whatever the player has bound to this key, or "" if it is free. The numbers
+// stored in ZoundMenuKey are EInputKey values, so ask the engine for the key name
+// and then for the alias sitting on it.
+function string GetKeyBinding(int Key)
+{
+    local string KeyName;
+
+    if((Key <= 0) || (ViewportOwner == none) || (ViewportOwner.Actor == none))
+    {
+        return "";
+    }
+    KeyName = ViewportOwner.Actor.ConsoleCommand("KEYNAME" @ string(Key));
+    if(KeyName == "")
+    {
+        return "";
+    }
+    return ViewportOwner.Actor.ConsoleCommand("KEYBINDING" @ KeyName);
+}
+
+function SetMenuKeyMessage()
+{
+    local string sBind;
+
+    sBind = "";
+    if(default.ZoundMenuKey != 0)
+    {
+        sBind = KeyBind[default.ZoundMenuKey];
+    }
+    if(bMenuKeyBlocked)
+    {
+        MesgBind = ((("- " $ sBind) $ " is bound to your own key - set a ZoundMenu key in ") $ MenuCmd) $ " -";
+    }
+    else
+    {
+        if(sBind != "")
+        {
+            MesgBind = ("- ZoundMenu Keybind on " $ sBind) $ " key -";
+        }
+        else
+        {
+            MesgBind = ("- ZoundMenu has no key - type: " $ MenuCmd) $ " -";
+        }
+    }
+}
+
+// End is still the default menu key, but KeyEvent swallows the press, so claiming
+// it blind kills whatever the player had there. Back off when the key carries a
+// bind of their own - the stock End bind that UT2004 ships with is editor leftovers
+// and does not count. A key picked in the Zound menu (bMenuKeyUserSet) is an
+// explicit choice and always wins.
+function CheckMenuKey()
+{
+    local string Bind;
+
+    bMenuKeyBlocked = false;
+    if(!default.bMenuKeyUserSet && default.ZoundMenuKey != 0)
+    {
+        Bind = GetKeyBinding(default.ZoundMenuKey);
+        if((Bind != "") && !(Bind ~= StockEndBind))
+        {
+            bMenuKeyBlocked = true;
+        }
+    }
+    SetMenuKeyMessage();
 }
 
 function Tick(float Delta)
@@ -77,6 +141,7 @@ function Tick(float Delta)
     {
         bMyInit = true;
         ClientLogon();
+        CheckMenuKey();
     }
     if((MyTime > float(10)) && !bMesgDone)
     {
@@ -275,4 +340,6 @@ defaultproperties
 {
     bVisible=true
     bRequiresTick=true
+    StockEndBind="CenterView|ACTOR ALIGN SNAPTOFLOOR ALIGN=1"
+    MenuCmd="mutate zoundmenu"
 }

@@ -1779,6 +1779,6 @@ defaultproperties
     Cyan=(R=0,G=160,B=255,A=255)
     bAddToServerPackages=true
     GroupName="WSZound"
-    FriendlyName="WSZound V1"
+    FriendlyName="WSZound V2"
     Description="Plays sounds triggered by chat messages"
 }

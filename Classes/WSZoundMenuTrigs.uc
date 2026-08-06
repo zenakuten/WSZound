@@ -42,6 +42,7 @@ var export editinline moCheckBox bZoundCnt;
 var export editinline moCheckBox MuteLenBox;
 var export editinline GUISlider MuteLenSlider;
 var export editinline GUILabel MuteLenLabel;
+var Material MuteLenFill;
 var export editinline GUIListBox PlayerList;
 var export editinline GUIListBox KeyBindList;
 var export editinline GUISlider BindSlider;
@@ -110,6 +111,7 @@ function InitComponent(GUIController MyController, GUIComponent MyOwner)
     MuteLenBox = moCheckBox(Controls[37]);
     MuteLenLabel = GUILabel(Controls[38]);
     MuteLenSlider = GUISlider(Controls[39]);
+    MuteLenFill = MuteLenSlider.FillImage;
     ResetFocus();
     CheckReplication();
     GUIButton(Controls[23]).Hint = ("Play selected Trigger" $ Chr(10)) $ "to yourself only";
@@ -1175,6 +1177,32 @@ function OnMuteLenChange(GUIComponent Sender)
     bSaveClient = true;
 }
 
+// The max-length slider only means anything while long-zound muting is on, so
+// grey it (and its label) out when the checkbox is unchecked. A disabled slider
+// draws with the style's disabled images and ignores mouse/keyboard; the fill
+// bar is drawn natively at full brightness regardless, so drop it too.
+function UpdateMuteLenEnabled()
+{
+    if(MuteLenBox.IsChecked())
+    {
+        MuteLenSlider.FillImage = MuteLenFill;
+        MuteLenSlider.EnableMe();
+        MuteLenLabel.EnableMe();
+    }
+    else
+    {
+        MuteLenSlider.FillImage = none;
+        MuteLenSlider.DisableMe();
+        MuteLenLabel.DisableMe();
+    }
+}
+
+function OnMuteLenBoxChange(GUIComponent Sender)
+{
+    UpdateMuteLenEnabled();
+    OnChangeClient(Sender);
+}
+
 function string FmtSeconds(float f)
 {
     local int whole, tenths;
@@ -1200,7 +1228,9 @@ function SaveClientStuff(bool bBind)
     Class'WSZoundClient'.default.ZoundEnabled = MyZound;
     if(bBind)
     {
+        // Explicit pick: stop auto-moving the key off the player's own binds.
         Class'WSZoundClient'.default.ZoundMenuKey = MyKeyBind;
+        Class'WSZoundClient'.default.bMenuKeyUserSet = true;
     }
     Class'WSZoundClient'.default.ZoundVolume = MyVolume;
     Class'WSZoundClient'.default.bMuteLongZounds = MuteLenBox.IsChecked();
@@ -1232,6 +1262,7 @@ function LoadClientStuff()
     MuteLenBox.Checked(Class'WSZoundClient'.default.bMuteLongZounds);
     MuteLenSlider.SetValue(Class'WSZoundClient'.default.MaxZoundSeconds);
     MuteLenLabel.Caption = ("Max Length: " $ FmtSeconds(MuteLenSlider.Value)) $ "s";
+    UpdateMuteLenEnabled();
     sTemp = "Key: " $ KeyBind[MyKeyBind];
     j = KeyBindList.List.ItemCount;
     KeyBindList.List.SetIndex(0);
@@ -1887,7 +1918,7 @@ defaultproperties
         WinWidth=0.1570000
         WinHeight=0.0280000
         bStandardized=false
-        OnChange=WSZoundMenuTrigs.OnChangeClient
+        OnChange=WSZoundMenuTrigs.OnMuteLenBoxChange
     end object
     Controls[37]=MuteLenChk
     begin object name="MuteLenLbl" class=XInterface.GUILabel
