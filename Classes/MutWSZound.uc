@@ -1760,7 +1760,7 @@ function GetServerDetails(out GameInfo.ServerResponseLine ServerState)
     i = ServerState.ServerInfo.Length;
     ServerState.ServerInfo.Length = i + 1;
     ServerState.ServerInfo[i].Key = "WSZound";
-    ServerState.ServerInfo[i].Value = "V1";
+    ServerState.ServerInfo[i].Value = "V2";
 }
 
 function ServerTraveling(string URL, bool bItems)
