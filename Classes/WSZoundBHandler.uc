@@ -32,7 +32,7 @@ function PreBeginPlay()
 
 function BroadcastText(PlayerReplicationInfo SenderPRI, PlayerController Receiver, coerce string Msg, optional name Type)
 {
-    if((SenderPRI != none) && (Type == 'Say') || Type == 'TeamSay')
+    if((SenderPRI != none) && (Type == 'Say' || Type == 'TeamSay'))
     {
         Msg = myMut.ChatHandler(Controller(SenderPRI.Owner), Msg, Receiver);
         if(Msg == "")

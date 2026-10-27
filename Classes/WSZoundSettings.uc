@@ -20,7 +20,6 @@ var config int ZoundMenuKey;
 var config int ZoundVolume;
 var config bool bMuteLongZounds;
 var config float MaxZoundSeconds;
-var config bool bMenuKeyUserSet;
 var config array<WSZoundClient.ZCTriggers> ZoundServer;
 
 defaultproperties

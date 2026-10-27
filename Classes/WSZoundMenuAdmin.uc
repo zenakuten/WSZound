@@ -381,7 +381,6 @@ defaultproperties
         ComponentJustification=TXTA_Left
         CaptionWidth=0.9000000
         Caption="Enable Zound on Server"
-        ComponentClassName="WSZound.wsGUICheckBoxButton"
         OnCreateComponent=Set0.InternalOnCreateComponent
         FontScale=FNS_Small
         Hint="Enables / Disables Server Zound."
@@ -397,7 +396,6 @@ defaultproperties
         ComponentJustification=TXTA_Left
         CaptionWidth=0.9000000
         Caption="Show Triggers to all Players"
-        ComponentClassName="WSZound.wsGUICheckBoxButton"
         OnCreateComponent=Set1.InternalOnCreateComponent
         FontScale=FNS_Small
         Hint="Everyone sees the Triggers."
@@ -413,7 +411,6 @@ defaultproperties
         ComponentJustification=TXTA_Left
         CaptionWidth=0.9000000
         Caption="Show Triggers to self always"
-        ComponentClassName="WSZound.wsGUICheckBoxButton"
         OnCreateComponent=Set2.InternalOnCreateComponent
         FontScale=FNS_Small
         Hint="Always show triggers in own chat."
@@ -429,7 +426,6 @@ defaultproperties
         ComponentJustification=TXTA_Left
         CaptionWidth=0.9000000
         Caption="Enable Player Announcement"
-        ComponentClassName="WSZound.wsGUICheckBoxButton"
         OnCreateComponent=Set3.InternalOnCreateComponent
         FontScale=FNS_Small
         Hint="Enables PlayerEnter / PlayerExit triggers."
@@ -445,7 +441,6 @@ defaultproperties
         ComponentJustification=TXTA_Left
         CaptionWidth=0.9000000
         Caption="Enable Announcement Once"
-        ComponentClassName="WSZound.wsGUICheckBoxButton"
         OnCreateComponent=Set4.InternalOnCreateComponent
         FontScale=FNS_Small
         Hint="Only announces at logon, not every level."
@@ -461,7 +456,6 @@ defaultproperties
         ComponentJustification=TXTA_Left
         CaptionWidth=0.9000000
         Caption="Enable Bots to use Zound"
-        ComponentClassName="WSZound.wsGUICheckBoxButton"
         OnCreateComponent=Set5.InternalOnCreateComponent
         FontScale=FNS_Small
         Hint="Allows Bots to call on Zound."
@@ -477,7 +471,6 @@ defaultproperties
         ComponentJustification=TXTA_Left
         CaptionWidth=0.9000000
         Caption="Disable Spectator to Player"
-        ComponentClassName="WSZound.wsGUICheckBoxButton"
         OnCreateComponent=Set6.InternalOnCreateComponent
         FontScale=FNS_Small
         Hint="Spectators / Players cant hear each other."
@@ -493,7 +486,6 @@ defaultproperties
         ComponentJustification=TXTA_Left
         CaptionWidth=0.9000000
         Caption="Use 24 hour Time"
-        ComponentClassName="WSZound.wsGUICheckBoxButton"
         OnCreateComponent=Set7.InternalOnCreateComponent
         FontScale=FNS_Small
         Hint="Uses 24 hour time in 'Time?'."
@@ -509,7 +501,6 @@ defaultproperties
         ComponentJustification=TXTA_Left
         CaptionWidth=0.9000000
         Caption="Use Zound In Game"
-        ComponentClassName="WSZound.wsGUICheckBoxButton"
         OnCreateComponent=Set8.InternalOnCreateComponent
         FontScale=FNS_Small
         Hint="Alows Zound during the game."
@@ -525,7 +516,6 @@ defaultproperties
         ComponentJustification=TXTA_Left
         CaptionWidth=0.9000000
         Caption="Use Zound Chat Logging"
-        ComponentClassName="WSZound.wsGUICheckBoxButton"
         OnCreateComponent=Set9.InternalOnCreateComponent
         FontScale=FNS_Small
         Hint="Enables a daily Zound Chatlog."
@@ -541,7 +531,6 @@ defaultproperties
         ComponentJustification=TXTA_Left
         CaptionWidth=0.9000000
         Caption="Use Zound Chat Filtering"
-        ComponentClassName="WSZound.wsGUICheckBoxButton"
         OnCreateComponent=Set10.InternalOnCreateComponent
         FontScale=FNS_Small
         Hint="Enables filtering of swear words."
@@ -557,7 +546,6 @@ defaultproperties
         ComponentJustification=TXTA_Left
         CaptionWidth=0.9000000
         Caption="Use Defined Player List"
-        ComponentClassName="WSZound.wsGUICheckBoxButton"
         OnCreateComponent=Set11.InternalOnCreateComponent
         FontScale=FNS_Small
         Hint="Only Players in a list can use Zound."

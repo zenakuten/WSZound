@@ -8,6 +8,7 @@ class wsCheckBox extends moCheckBox;
 function InitComponent(GUIController MyController, GUIComponent MyOwner)
 {
     local GUIStyles S;
+    ComponentClassName = string(class'wsGUICheckBoxButton'); // follows the package name
     Super(GUIMenuOption).Initcomponent(MyController, MyOwner);
 
     MyCheckBox = wsGUICheckBoxButton(MyComponent);
@@ -23,6 +24,5 @@ defaultproperties
 {
      bSquare=True
      CaptionWidth=0.800000
-     ComponentClassName="WSZound.wsGUICheckBoxButton"
      LabelStyleName="WSLabel"
 }

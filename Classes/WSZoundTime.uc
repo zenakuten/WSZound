@@ -179,7 +179,8 @@ function PlayTimeSound(string SoundClass)
 {
     local Sound MySound;
 
-    MySound = Sound(DynamicLoadObject("WSZound." $ SoundClass, Class'Engine.Sound'));
+    // The clock sounds are imported into this package, whatever it is named.
+    MySound = Sound(DynamicLoadObject((string(Class.Outer.Name) $ ".") $ SoundClass, Class'Engine.Sound'));
     if(MySound == none)
     {
         return;

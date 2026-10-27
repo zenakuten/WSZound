@@ -21,6 +21,14 @@ var bool bRepWait;
 var bool bAdmin;
 var() bool bReset;
 var string sText;
+// Coded-list lines are gathered here and added to sText ~50 at a time, so building the
+// admin list doesn't copy the whole growing text once per trigger.
+var string sChunk;
+var int nChunk;
+// Triggers this player can see (code prefix stripped), in list order, and Caps copies
+// for the filter box. Built by LoadTriggers; RebuildTrigList fills the list from them.
+var array<string> TrigName;
+var array<string> TrigCaps;
 var int iTotal;
 var int numSounds;
 var int RepSecs;
@@ -59,6 +67,9 @@ var export editinline GUIListBox FavorList;
 var export editinline GUIScrollTextBox CodedList;
 var WSZoundReplication ZRI;
 var Color clRed;
+// Colour codes for the admin coded list, built once in InitComponent. They used to be
+// raw bytes in AddToCodedList, which got corrupted and garbled the list.
+var string CodeRed, CodeYel, CodeGrn, CodeBlu, CodeWht;
 
 function InitComponent(GUIController MyController, GUIComponent MyOwner)
 {
@@ -88,6 +99,14 @@ function InitComponent(GUIController MyController, GUIComponent MyOwner)
     CodedList = GUIScrollTextBox(Controls[8]);
     CodedList.TextAlign = TXTA_Left;
     Controls[8].bVisible = false;
+    // Coded-list colours: HideInMenu, Random and Dedicated* match the legend labels,
+    // the reset after a coloured name matches Normal, and admin-only red keeps the two
+    // 16s that survived in the corrupted bytes.
+    CodeYel = ((Chr(27) $ Chr(250)) $ Chr(250)) $ Chr(16);
+    CodeGrn = ((Chr(27) $ Chr(16)) $ Chr(200)) $ Chr(16);
+    CodeBlu = ((Chr(27) $ Chr(16)) $ Chr(128)) $ Chr(255);
+    CodeRed = ((Chr(27) $ Chr(255)) $ Chr(16)) $ Chr(16);
+    CodeWht = ((Chr(27) $ Chr(220)) $ Chr(220)) $ Chr(220);
     MutedList = GUIListBox(Controls[9]);
     MutedList.List.TextAlign = TXTA_Left;
     FavorList = GUIListBox(Controls[10]);
@@ -372,7 +391,13 @@ function CheckReplication()
 function OnFilterChange(GUIComponent Sender)
 {
     sFilter = Caps(FilterBox.GetText());
-    LoadTriggers(true);
+    // Only re-filter the cached names; reload when nothing has been loaded yet.
+    if(TrigName.Length == 0)
+    {
+        LoadTriggers(true);
+        return;
+    }
+    RebuildTrigList(true);
 }
 
 function LoadTriggers(bool bDone)
@@ -387,9 +412,11 @@ function LoadTriggers(bool bDone)
     {
         return;
     }
-    AllTrigList.List.Clear();
-    iTotal = 0;
+    TrigName.Length = 0;
+    TrigCaps.Length = 0;
     sText = "";
+    sChunk = "";
+    nChunk = 0;
     for(i = 0; i < 250; i++)
     {
         if(MySoundA[i] == "")
@@ -488,12 +515,48 @@ function LoadTriggers(bool bDone)
     }
     if(bAdmin)
     {
+        sText = sText $ sChunk;
+        sChunk = "";
+        nChunk = 0;
         if(sText == "")
         {
             sText = "      ";
         }
         CodedList.MyScrollText.SetContent(sText, Chr(10));
     }
+    RebuildTrigList(bDone);
+}
+
+// Fills the trigger list from the cached names in one pass. Adding ~900 items one
+// GUIList.Add at a time (each with its own notifications) made every keystroke in the
+// filter box slow. Ends in the same state the Add loop did: first item selected.
+function RebuildTrigList(bool bDone)
+{
+    local GUIList L;
+    local int i, n;
+
+    L = AllTrigList.List;
+    L.Clear();
+    L.Elements.Length = TrigName.Length;
+    for(i = 0; i < TrigName.Length; i++)
+    {
+        if((sFilter == "") || InStr(TrigCaps[i], sFilter) != -1)
+        {
+            L.Elements[n].Item = TrigName[i];
+            n++;
+        }
+    }
+    L.Elements.Length = n;
+    L.ItemCount = n;
+    if(n > 0)
+    {
+        L.SetIndex(0);
+    }
+    if(L.MyScrollBar != none)
+    {
+        L.MyScrollBar.AlignThumb();
+    }
+    iTotal = n;
     ShowTotalTriggers(iTotal, bDone);
 }
 
@@ -555,6 +618,7 @@ function string GetStringTriggers(int iNum)
 function AddToAllTriggers(string sTrig, bool bAdm)
 {
     local string sTemp;
+    local int n;
 
     if(sTrig != "")
     {
@@ -564,11 +628,9 @@ function AddToAllTriggers(string sTrig, bool bAdm)
         {
             return;
         }
-        if((sFilter == "") || InStr(Caps(sTrig), sFilter) != -1)
-        {
-            AllTrigList.List.Add(sTrig);
-            iTotal++;
-        }
+        n = TrigName.Length;
+        TrigName[n] = sTrig;
+        TrigCaps[n] = Caps(sTrig);
         if(bAdm)
         {
             AddToCodedList(sTrig, sTemp);
@@ -578,59 +640,49 @@ function AddToAllTriggers(string sTrig, bool bAdm)
 
 function AddToCodedList(string sTrig, string sLeft)
 {
-    local string Yel, Red, Wht, Blu, Grn, Vio,
-	    Aqu;
-
-    Yel = "��";
-    Red = "�";
-    Wht = "���";
-    Blu = "��";
-    Grn = "�";
-    Vio = "��";
-    Aqu = "��";
     if((sTrig == "") || sLeft == "")
     {
         return;
     }
     if(sLeft == "}")
     {
-        sTrig = (((Red $ sTrig) $ Blu) $ "*") $ Wht;        
+        sTrig = (((CodeRed $ sTrig) $ CodeBlu) $ "*") $ CodeWht;        
     }
     else
     {
         if(sLeft == "{")
         {
-            sTrig = (Red $ sTrig) $ Wht;            
+            sTrig = (CodeRed $ sTrig) $ CodeWht;            
         }
         else
         {
             if(sLeft == "]")
             {
-                sTrig = (((Yel $ sTrig) $ Blu) $ "*") $ Wht;                
+                sTrig = (((CodeYel $ sTrig) $ CodeBlu) $ "*") $ CodeWht;                
             }
             else
             {
                 if(sLeft == "[")
                 {
-                    sTrig = (Yel $ sTrig) $ Wht;                    
+                    sTrig = (CodeYel $ sTrig) $ CodeWht;                    
                 }
                 else
                 {
                     if(sLeft == ")")
                     {
-                        sTrig = (((Grn $ sTrig) $ Blu) $ "*") $ Wht;                        
+                        sTrig = (((CodeGrn $ sTrig) $ CodeBlu) $ "*") $ CodeWht;                        
                     }
                     else
                     {
                         if(sLeft == "(")
                         {
-                            sTrig = (Grn $ sTrig) $ Wht;                            
+                            sTrig = (CodeGrn $ sTrig) $ CodeWht;                            
                         }
                         else
                         {
                             if(sLeft == ">")
                             {
-                                sTrig = ((sTrig $ Blu) $ "*") $ Wht;
+                                sTrig = ((sTrig $ CodeBlu) $ "*") $ CodeWht;
                             }
                         }
                     }
@@ -638,7 +690,14 @@ function AddToCodedList(string sTrig, string sLeft)
             }
         }
     }
-    sText = (sText $ sTrig) $ Chr(10);
+    sChunk = (sChunk $ sTrig) $ Chr(10);
+    nChunk++;
+    if(nChunk >= 50)
+    {
+        sText = sText $ sChunk;
+        sChunk = "";
+        nChunk = 0;
+    }
 }
 
 function bool FavorListDblClick(GUIComponent Sender)
@@ -781,7 +840,7 @@ function bool OnClickSubFav(GUIComponent Sender)
     }
     i = FavorList.List.Index;
     sTemp = FavorList.List.GetItemAtIndex(i);
-    i = InStr(Caps(MyFavors), Caps(sTemp) $ ",");
+    i = Class'WSZoundClient'.static.FindListEntry(Caps(MyFavors), Caps(sTemp));
     if(i == -1)
     {
         PlayerOwner().ClientMessage(("< Cannot find " $ sTemp) $ " in your Favourite List >");
@@ -803,7 +862,7 @@ function bool OnClickAddFav(GUIComponent Sender)
     ResetFocus();
     i = AllTrigList.List.Index;
     sTemp = AllTrigList.List.GetItemAtIndex(i);
-    i = InStr(Caps(MyFavors), Caps(sTemp) $ ",");
+    i = Class'WSZoundClient'.static.FindListEntry(Caps(MyFavors), Caps(sTemp));
     if(i != -1)
     {
         PlayerOwner().ClientMessage(("< " $ sTemp) $ " is already in your Favourite List >");
@@ -835,7 +894,7 @@ function bool OnClickSubMute(GUIComponent Sender)
     }
     i = MutedList.List.Index;
     sTemp = MutedList.List.GetItemAtIndex(i);
-    i = InStr(Caps(MyMutes), Caps(sTemp) $ ",");
+    i = Class'WSZoundClient'.static.FindListEntry(Caps(MyMutes), Caps(sTemp));
     if(i == -1)
     {
         PlayerOwner().ClientMessage(("< Cannot find " $ sTemp) $ " in your Mute buffer >");
@@ -857,7 +916,7 @@ function bool OnClickAddMute(GUIComponent Sender)
     ResetFocus();
     i = AllTrigList.List.Index;
     sTemp = AllTrigList.List.GetItemAtIndex(i);
-    i = InStr(Caps(MyMutes), Caps(sTemp) $ ",");
+    i = Class'WSZoundClient'.static.FindListEntry(Caps(MyMutes), Caps(sTemp));
     if(i != -1)
     {
         PlayerOwner().ClientMessage(("< " $ sTemp) $ " is already in your Mute buffer >");
@@ -1145,7 +1204,7 @@ function bool OnClickDump(GUIComponent Sender)
         j = Len(sDump);
         if(j > 960)
         {
-            Controller.OpenMenu("WSZound.WSZoundNames", SvrID, sDump);
+            Controller.OpenMenu(string(Class'WSZoundNames'), SvrID, sDump);
             SvrID = (MyServerID $ "_") $ string(Z);
             sDump = "";
             Z++;
@@ -1154,7 +1213,7 @@ function bool OnClickDump(GUIComponent Sender)
     }
     if(j > 3)
     {
-        Controller.OpenMenu("WSZound.WSZoundNames", SvrID, sDump);
+        Controller.OpenMenu(string(Class'WSZoundNames'), SvrID, sDump);
     }
     ResetFocus();
     return true;
@@ -1218,9 +1277,7 @@ function SaveClientStuff(bool bBind)
     Class'WSZoundClient'.default.ZoundEnabled = MyZound;
     if(bBind)
     {
-        // Explicit pick: stop auto-moving the key off the player's own binds.
         Class'WSZoundClient'.default.ZoundMenuKey = MyKeyBind;
-        Class'WSZoundClient'.default.bMenuKeyUserSet = true;
     }
     Class'WSZoundClient'.default.ZoundVolume = MyVolume;
     Class'WSZoundClient'.default.bMuteLongZounds = MuteLenBox.IsChecked();
@@ -1269,9 +1326,13 @@ function LoadClientStuff()
     ChatLine.SetText("");
 }
 
+// Human players who aren't only spectating, read from the player info every client
+// already has. The server used to rebuild and re-send this list on every join/leave.
 function SetPlayerList()
 {
-    local string sTemp;
+    local GameReplicationInfo GRI;
+    local PlayerReplicationInfo PRI;
+    local string sTemp, sSelf;
     local int i;
 
     PlayerList.List.Clear();
@@ -1280,16 +1341,25 @@ function SetPlayerList()
     {
         PlayerList.List.Add("None");
     }
-    for(i = 0; i < 32; i++)
+    GRI = PlayerOwner().GameReplicationInfo;
+    if(GRI != none)
     {
-        sTemp = ZRI.Players[i];
-        if(sTemp == "")
+        sSelf = PlayerOwner().PlayerReplicationInfo.PlayerName;
+        for(i = 0; i < GRI.PRIArray.Length; i++)
         {
-            break;
-        }
-        if(((sTemp != MyPlayer) && sTemp != PlayerOwner().PlayerReplicationInfo.PlayerName) && sTemp != "None")
-        {
-            PlayerList.List.Add(sTemp);
+            PRI = GRI.PRIArray[i];
+            if(((PRI == none) || PRI.bBot) || PRI.bOnlySpectator)
+            {
+                continue;
+            }
+            sTemp = PRI.PlayerName;
+            if((((sTemp != "") && sTemp != "WebAdmin") && sTemp != "DemoRecSpectator") && sTemp != "None")
+            {
+                if((sTemp != MyPlayer) && sTemp != sSelf)
+                {
+                    PlayerList.List.Add(sTemp);
+                }
+            }
         }
     }
     PlayerList.List.SetIndex(0);
@@ -1409,7 +1479,7 @@ function int FindKeyBind(string sBind)
 
 function bool OnClickAbout(GUIComponent Sender)
 {
-    Controller.OpenMenu("WSZound.WSZoundMenuAbout");
+    Controller.OpenMenu(string(Class'WSZoundMenuAbout'));
     return true;
 }
 
@@ -1856,7 +1926,6 @@ defaultproperties
         ComponentJustification=TXTA_Left
         CaptionWidth=0.9000000
         Caption="Enable Zound"
-        ComponentClassName="WSZound.wsGUICheckBoxButton"
         OnCreateComponent=ZEnable.InternalOnCreateComponent
         FontScale=FNS_Small
         Hint="Enable/Disable Zound"
@@ -1899,7 +1968,6 @@ defaultproperties
         ComponentJustification=TXTA_Left
         CaptionWidth=0.9000000
         Caption="Mute Long Zounds"
-        ComponentClassName="WSZound.wsGUICheckBoxButton"
         OnCreateComponent=MuteLenChk.InternalOnCreateComponent
         FontScale=FNS_Small
         Hint="Mute zounds longer than the length below"
